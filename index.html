@@ -48,7 +48,7 @@
 <body>
 <div class="wrap">
   <h1>MelodyMelonTap 🎤🍉</h1>
-  <div class="version">Version: v2026.05.12-hybrid-audio120-v22.1-ripenessfix</div>
+  <div class="version">Version: v2026.05.12-hybrid-audio120-v22.2-exportcsv</div>
   <div class="voiceNote">🎙 AI Voice Summary อ่านสรุปผลแบบภาษาคน ไม่อ่านตัวเลขยาว</div>
 
   <div class="card">
@@ -519,8 +519,61 @@ function analyzeSession(){
   document.getElementById("featureList").innerHTML=`
     <li>Q: ${Quse.toFixed(2)}</li><li>tau: ${tauUsed.toFixed(3)}</li><li>f_peak: ${avg.fPeak.toFixed(1)} Hz</li><li>f_mean: ${fMeanUse.toFixed(1)} Hz</li><li>f_std: ${fStdUse.toFixed(1)} Hz</li><li>f_variance: ${fVarUse.toFixed(1)}</li><li>hollow_index: ${hollowIndexUse.toFixed(3)}</li><li>Firmness raw: ${firmness.toFixed(1)} N</li><li>high_ratio: ${highRatioUse.toFixed(3)}</li><li>low_ratio: ${lowRatioUse.toFixed(3)}</li><li>flatness: ${flatnessUse.toFixed(3)}</li><li>rolloff85: ${rolloff85Use.toFixed(1)} Hz</li><li>peak count: ${peakCountUse.toFixed(0)}</li><li>low_ratio: ${avg.lowRatio.toFixed(3)}</li><li>flatness: ${avg.flatness.toFixed(3)}</li><li>Audio120 ripeness label: ${ripenessLabel120}</li><li>Final ripeness group: ${group} (Raw2/v20 primary)</li><li>Perfect ripe meter: ${ripeMeter.toFixed(0)}/100</li><li>คุณภาพสัญญาณ: ${sigLabel} (${sigScore.toFixed(0)}%)</li><li>Q spread: ${qSpread.toFixed(2)}</li><li>tau fallback: ${tauFallbackCount}/${NUM_TAPS}</li><li>สถานะผล: ${warnLowQuality ? "ใช้ได้แต่ควรวัดซ้ำเพื่อยืนยัน" : "ใช้ได้"}</li>`;
   saveHistory(ripe.label,brix,conf,melonScore,buyText,sigScore);
-  speakSummaryAI({ripenessText:(group==="C"||group==="B")?"แตงโมลูกนี้อยู่ในช่วงพอดีกิน":group==="D"?"แตงโมลูกนี้ใกล้สุก":group==="E"?"แตงโมลูกนี้ยังค่อนข้างดิบ":"แตงโมลูกนี้มีแนวโน้มสุกเกิน", sweetnessText:sweetnessLabel(brix), crispText, juiceText:juiceLabel(juice), hollowText, qualityText});
-  setStatus("ตรวจวัดเสร็จแล้ว");
+  speakSummaryAI({ripenessText:(group==="C"||group==="B")?"แตงโมลูกนี้อยู่ในช่วงพอดีกิน":group==="D"?"แตงโมลูกนี้ใกล้สุก":group==="E"?"แตงโมลูกนี้ยังค่อนข้างดิบ":"แตงโมลูกนี้มีแนวโน้มสุกมาก", sweetnessText:sweetnessLabel(brix), crispText, juiceText:juiceLabel(juice), hollowText, qualityText});
+  
+  saveMeasurementDebug({
+    timestamp: new Date().toISOString(),
+    sample_id: "WM" + String(measurementHistory.length + 1).padStart(3,"0"),
+
+    ripeness_app: ripe.label,
+    ripeness_group: group,
+    audio120_ripeness: ripenessLabel120,
+
+    brix_app: Number(brix.toFixed(2)),
+    firmness_app: Number(firmness.toFixed(2)),
+    juice_app: Number(juice.toFixed(2)),
+    hollow_app: Number(hollowPercent.toFixed(2)),
+
+    confidence_app: Number(conf.toFixed(1)),
+    melon_score: Number(melonScore),
+
+    Q: Number(Quse.toFixed(4)),
+    tau: Number(tauUsed.toFixed(4)),
+    f_peak: Number(avg.fPeak.toFixed(2)),
+    f_mean: Number(fMeanUse.toFixed(2)),
+    f_std: Number(fStdUse.toFixed(2)),
+    f_variance: Number(fVarUse.toFixed(2)),
+    hollow_index: Number(hollowIndexUse.toFixed(4)),
+
+    bandwidth: Number(bwUse.toFixed(2)),
+    high_ratio: Number(highRatioUse.toFixed(4)),
+    low_ratio: Number(lowRatioUse.toFixed(4)),
+    flatness: Number(flatnessUse.toFixed(4)),
+
+    band_50_100: Number(band50100Use.toFixed(4)),
+    band_100_150: Number(band100150Use.toFixed(4)),
+    band_150_300: Number(band150300Use.toFixed(4)),
+    band_300_600: Number(band300600Use.toFixed(4)),
+    band_600_1000: Number(band6001000Use.toFixed(4)),
+
+    centroid: Number(centroidUse.toFixed(2)),
+    rolloff85: Number(rolloff85Use.toFixed(2)),
+    rolloff95: Number(rolloff95Use.toFixed(2)),
+
+    peak_count: Number(peakCountUse.toFixed(0)),
+    peak2_ratio: Number(peak2RatioUse.toFixed(4)),
+    attack_time: Number(attackTimeUse.toFixed(4)),
+    decay_ratio: Number(decayRatioUse.toFixed(4)),
+
+    signal_quality: sigLabel,
+    signal_score: Number(sigScore.toFixed(1)),
+    q_spread: Number(qSpread.toFixed(3)),
+    tau_fallback_count: tauFallbackCount,
+    measurement_status: warnLowQuality ? "ควรวัดซ้ำ" : "ใช้ได้"
+  });
+
+
+setStatus("ตรวจวัดเสร็จแล้ว");
 }
 function showRetry(conf,sigLabel,sigScore,qSpread,tauSpread,tauFallbackCount){
   document.getElementById("result").style.backgroundColor="#fff3cd";document.getElementById("result").innerHTML=`ผลการวัดยังไม่นิ่ง<br>คุณภาพสัญญาณ: ${sigLabel} (${sigScore.toFixed(0)}%)<br>ความเชื่อมั่น: ${conf.toFixed(0)}%<br>กรุณาเคาะใหม่อีกครั้ง`;

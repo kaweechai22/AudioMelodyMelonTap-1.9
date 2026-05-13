@@ -1,4 +1,4 @@
-const CACHE_NAME="melon-hybrid-audio120-v22-1-ripenessfix";
+const CACHE_NAME="melon-hybrid-audio120-v22-2-exportcsv";
 const ASSETS=["./","./index.html","./manifest.json","./icon.png"];
 self.addEventListener("install",e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE_NAME).then(c=>c.addAll(ASSETS)).catch(()=>{}));});
 self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.map(k=>k!==CACHE_NAME?caches.delete(k):null))).then(()=>self.clients.claim()));});

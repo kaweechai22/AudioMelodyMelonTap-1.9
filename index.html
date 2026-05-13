@@ -48,7 +48,7 @@
 <body>
 <div class="wrap">
   <h1>MelodyMelonTap 🎤🍉</h1>
-  <div class="version">Version: v2026.05.12-hybrid-audio120-v22.2-exportcsv</div>
+  <div class="version">Version: v2026.05.12-hybrid-audio120-v22.4-share-export-all</div>
   <div class="voiceNote">🎙 AI Voice Summary อ่านสรุปผลแบบภาษาคน ไม่อ่านตัวเลขยาว</div>
 
   <div class="card">
@@ -92,7 +92,15 @@
   </div>
 
   <div class="card">
-    <details>
+    
+<div style="margin:12px 0;display:flex;gap:10px;flex-wrap:wrap;">
+  
+  <button id="clearCsvBtn" class="secondary" onclick="clearMeasurementsCSV()" type="button">
+    ล้างข้อมูล CSV
+  </button>
+</div>
+
+<details>
       <summary>ข้อมูลเชิงเทคนิค / Debug</summary>
       <ul id="featureList"></ul>
     </details>
@@ -311,10 +319,52 @@ async function setupAudio(){
   }
 }
 async function startSession(){
-  tapFeatures=[];updateTapProgress();setStatus("กำลังเตรียมไมโครโฟน...");document.getElementById("startBtn").disabled=true;
+  tapFeatures=[];updateTapProgress();setStatus("กำลังเตรียมไมโครโฟน...");
+function shareResult(){
+  const text =
+    document.getElementById("result").innerText +
+    "\nMelon Score: " + document.getElementById("melonScore").innerText +
+    "\nคำแนะนำ: " + document.getElementById("buyBadge").innerText +
+    "\n" + document.getElementById("signalBadge").innerText;
+
+  // ดาวน์โหลด CSV ข้อมูลดิบทั้งหมดพร้อมกัน
+  const exported = downloadMeasurementsCSV(false);
+
+  if(navigator.share){
+    navigator.share({
+      title:"ผลวัดแตงโม MelodyMelonTap",
+      text: text + (exported ? "\n\nไฟล์ CSV ข้อมูลดิบถูกดาวน์โหลดไว้แล้ว" : "")
+    }).catch(()=>{});
+  }else{
+    alert(text + (exported ? "\n\nดาวน์โหลด CSV แล้ว" : "\n\nยังไม่มีข้อมูล CSV"));
+  }
+}
+
+document.getElementById("startBtn").disabled=true;
   setSignalQuality("รอวัด","mid");
   try{await setupAudio();await audioContext.resume();listening=true;captureState="idle";cooldownFrames=0;estimateNoiseFloor(12);}
-  catch(e){console.error(e);setStatus("ไม่สามารถเข้าถึงไมโครโฟนได้");document.getElementById("startBtn").disabled=false;setSignalQuality("ใช้งานไม่ได้","bad");}
+  catch(e){console.error(e);setStatus("ไม่สามารถเข้าถึงไมโครโฟนได้");
+function shareResult(){
+  const text =
+    document.getElementById("result").innerText +
+    "\nMelon Score: " + document.getElementById("melonScore").innerText +
+    "\nคำแนะนำ: " + document.getElementById("buyBadge").innerText +
+    "\n" + document.getElementById("signalBadge").innerText;
+
+  // ดาวน์โหลด CSV ข้อมูลดิบทั้งหมดพร้อมกัน
+  const exported = downloadMeasurementsCSV(false);
+
+  if(navigator.share){
+    navigator.share({
+      title:"ผลวัดแตงโม MelodyMelonTap",
+      text: text + (exported ? "\n\nไฟล์ CSV ข้อมูลดิบถูกดาวน์โหลดไว้แล้ว" : "")
+    }).catch(()=>{});
+  }else{
+    alert(text + (exported ? "\n\nดาวน์โหลด CSV แล้ว" : "\n\nยังไม่มีข้อมูล CSV"));
+  }
+}
+
+document.getElementById("startBtn").disabled=false;setSignalQuality("ใช้งานไม่ได้","bad");}
 }
 function estimateNoiseFloor(n){
   if(!listening)return;analyser.getFloatTimeDomainData(timeData);const rms=getRMS(timeData);noiseFloor=n===12?rms:0.85*noiseFloor+0.15*rms;
@@ -333,7 +383,28 @@ function loop(){
       const feat=extractFeaturesFromEvent(eventFrames);
       if(feat){tapFeatures.push(feat);updateTapProgress();}
       else{setStatus("เสียงไม่ชัด กรุณาเคาะใหม่");setSignalQuality("สัญญาณอ่อน","bad");}
-      if(tapFeatures.length>=NUM_TAPS){listening=false;analyzeSession();document.getElementById("startBtn").disabled=false;return;}
+      if(tapFeatures.length>=NUM_TAPS){listening=false;analyzeSession();
+function shareResult(){
+  const text =
+    document.getElementById("result").innerText +
+    "\nMelon Score: " + document.getElementById("melonScore").innerText +
+    "\nคำแนะนำ: " + document.getElementById("buyBadge").innerText +
+    "\n" + document.getElementById("signalBadge").innerText;
+
+  // ดาวน์โหลด CSV ข้อมูลดิบทั้งหมดพร้อมกัน
+  const exported = downloadMeasurementsCSV(false);
+
+  if(navigator.share){
+    navigator.share({
+      title:"ผลวัดแตงโม MelodyMelonTap",
+      text: text + (exported ? "\n\nไฟล์ CSV ข้อมูลดิบถูกดาวน์โหลดไว้แล้ว" : "")
+    }).catch(()=>{});
+  }else{
+    alert(text + (exported ? "\n\nดาวน์โหลด CSV แล้ว" : "\n\nยังไม่มีข้อมูล CSV"));
+  }
+}
+
+document.getElementById("startBtn").disabled=false;return;}
       captureState="idle";eventFrames=[];cooldownFrames=8;
       if(tapFeatures.length<NUM_TAPS)setStatus(`สำเร็จ ${tapFeatures.length}/${NUM_TAPS} ครั้ง กรุณาเคาะอีกครั้ง`);
     }
@@ -601,11 +672,109 @@ function updateTapProgress(){document.getElementById("tapProgress").innerText=`$
 function setStatus(msg){document.getElementById("status").innerText=`สถานะ: ${msg}`;}
 function saveHistory(level,brix,conf,score,buy,sig){const h=JSON.parse(localStorage.getItem("history")||"[]");h.unshift({time:new Date().toLocaleString(),level,brix,conf,score,buy,sig});localStorage.setItem("history",JSON.stringify(h.slice(0,8)));updateHistory();}
 function updateHistory(){const h=JSON.parse(localStorage.getItem("history")||"[]");document.getElementById("history").innerHTML=h.map(x=>`<li>${x.time}: ${x.level} | ${safe(x.brix,0).toFixed(1)} °Bx | Score ${x.score}/100 | ${x.buy}</li>`).join("");}
+
+let measurementHistory = JSON.parse(localStorage.getItem("melonMeasurementHistory") || "[]");
+
+function saveMeasurementDebug(data){
+  measurementHistory.push(data);
+  localStorage.setItem("melonMeasurementHistory", JSON.stringify(measurementHistory));
+}
+
+
+
+
+function buildMeasurementsCSV(){
+  if(!measurementHistory.length) return "";
+  const headers = Object.keys(measurementHistory[0]);
+  const rows = measurementHistory.map(r =>
+    headers.map(h => {
+      const v = r[h] ?? "";
+      return '"' + String(v).replace(/"/g,'""') + '"';
+    }).join(",")
+  );
+  return "\uFEFF" + headers.join(",") + "\n" + rows.join("\n");
+}
+
+function downloadMeasurementsCSV(showAlert=true){
+  const csv = buildMeasurementsCSV();
+  if(!csv){
+    if(showAlert) alert("ยังไม่มีข้อมูลการวัด");
+    return false;
+  }
+
+  const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "MelodyMelonTap_v22_measurements.csv";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  return true;
+}
+
+function exportMeasurementsCSV(){
+  downloadMeasurementsCSV(true);
+}
+
+function clearMeasurementsCSV(){
+  if(confirm("ต้องการล้างข้อมูลการวัดที่บันทึกไว้ในเครื่องนี้หรือไม่?")){
+    measurementHistory = [];
+    localStorage.setItem("melonMeasurementHistory", "[]");
+    alert("ล้างข้อมูลแล้ว");
+  }
+}
+
 function resetAll(){
-  listening=false;if(rafId)cancelAnimationFrame(rafId);tapFeatures=[];captureState="idle";cooldownFrames=0;updateTapProgress();setStatus("พร้อมเริ่มวัด");document.getElementById("startBtn").disabled=false;
+  listening=false;if(rafId)cancelAnimationFrame(rafId);tapFeatures=[];captureState="idle";cooldownFrames=0;updateTapProgress();setStatus("พร้อมเริ่มวัด");
+function shareResult(){
+  const text =
+    document.getElementById("result").innerText +
+    "\nMelon Score: " + document.getElementById("melonScore").innerText +
+    "\nคำแนะนำ: " + document.getElementById("buyBadge").innerText +
+    "\n" + document.getElementById("signalBadge").innerText;
+
+  // ดาวน์โหลด CSV ข้อมูลดิบทั้งหมดพร้อมกัน
+  const exported = downloadMeasurementsCSV(false);
+
+  if(navigator.share){
+    navigator.share({
+      title:"ผลวัดแตงโม MelodyMelonTap",
+      text: text + (exported ? "\n\nไฟล์ CSV ข้อมูลดิบถูกดาวน์โหลดไว้แล้ว" : "")
+    }).catch(()=>{});
+  }else{
+    alert(text + (exported ? "\n\nดาวน์โหลด CSV แล้ว" : "\n\nยังไม่มีข้อมูล CSV"));
+  }
+}
+
+document.getElementById("startBtn").disabled=false;
   document.getElementById("result").innerHTML="ยังไม่มีผลลัพธ์";["ripenessVal","brixVal","firmVal","juiceVal","hollowVal","confVal"].forEach(id=>document.getElementById(id).innerText="-");["amiVal","sweetnessText","firmText","juiceText","hollowText","groupVal"].forEach(id=>document.getElementById(id).innerText="-");document.getElementById("melonScore").innerText="-";document.getElementById("buyBadge").className="buyBadge";document.getElementById("buyBadge").innerText="-";document.getElementById("scoreExplain").innerText="ยังไม่มีการประเมิน";["brixBar","firmBar","juiceBar","hollowBar","confBar"].forEach(id=>setBar(id,0));document.getElementById("featureList").innerHTML="";updateWatermelonColor("#ff5252");setSignalQuality("รอวัด","mid");
 }
-function shareResult(){const text=document.getElementById("result").innerText+"\nMelon Score: "+document.getElementById("melonScore").innerText+"\nคำแนะนำ: "+document.getElementById("buyBadge").innerText;if(navigator.share)navigator.share({title:"ผลวัดแตงโม",text});else alert(text);}
+
+
+function shareResult(){
+  const text =
+    document.getElementById("result").innerText +
+    "\nMelon Score: " + document.getElementById("melonScore").innerText +
+    "\nคำแนะนำ: " + document.getElementById("buyBadge").innerText +
+    "\n" + document.getElementById("signalBadge").innerText;
+
+  // ดาวน์โหลด CSV ข้อมูลดิบทั้งหมดพร้อมกัน
+  const exported = downloadMeasurementsCSV(false);
+
+  if(navigator.share){
+    navigator.share({
+      title:"ผลวัดแตงโม MelodyMelonTap",
+      text: text + (exported ? "\n\nไฟล์ CSV ข้อมูลดิบถูกดาวน์โหลดไว้แล้ว" : "")
+    }).catch(()=>{});
+  }else{
+    alert(text + (exported ? "\n\nดาวน์โหลด CSV แล้ว" : "\n\nยังไม่มีข้อมูล CSV"));
+  }
+}
+
 document.getElementById("startBtn").addEventListener("click",startSession);
 document.getElementById("resetBtn").addEventListener("click",resetAll);
 document.getElementById("shareBtn").addEventListener("click",shareResult);

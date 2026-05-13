@@ -48,7 +48,7 @@
 <body>
 <div class="wrap">
   <h1>MelodyMelonTap 🎤🍉</h1>
-  <div class="version">Version: v2026.05.12-hybrid-audio120-v22</div>
+  <div class="version">Version: v2026.05.12-hybrid-audio120-v22.1-ripenessfix</div>
   <div class="voiceNote">🎙 AI Voice Summary อ่านสรุปผลแบบภาษาคน ไม่อ่านตัวเลขยาว</div>
 
   <div class="card">
@@ -465,7 +465,22 @@ function analyzeSession(){
   const ripeDistance=perfectRipeDistance(brix,firmness,juice,hollowPercent,Quse,tauUsed);
   const ripeMeter=perfectRipeMeter(ripeDistance);
   const ripenessLabel120=classifyRipenessAI120(avg.fPeak,Quse,tauUsed,fStdUse,fVarUse,hollowIndexUse,bwUse,highRatioUse,lowRatioUse,flatnessUse,band50100Use,band100150Use,band150300Use,band300600Use,band6001000Use,centroidUse,rolloff85Use,rolloff95Use,peakCountUse,peak2RatioUse,attackTimeUse,decayRatioUse);
-  const group=groupFromRipenessLabel(ripenessLabel120);
+
+  // v22.1: ใช้ Raw2/v20 ripeness logic เป็นตัวหลัก เพราะเสถียรกว่าในสนามจริง
+  // Audio120 ripeness ใช้เป็นข้อมูลประกอบใน debug เท่านั้น
+  let group = classifyRipenessAI(Quse, fMeanUse, fStdUse, fVarUse, hollowIndexUse);
+
+  // guard rule: กันเคสที่โมเดลเสียงดิบโยนไป "ดิบ" ทั้งที่ค่าคุณภาพทำนายชี้ว่าใกล้/สุกแล้ว
+  if(group === "E" && brix >= 10.2 && juice >= 55 && hollowPercent < 22){
+    group = "C";
+  }
+  if(group === "D" && brix >= 11.0 && juice >= 60 && hollowPercent < 15){
+    group = "C";
+  }
+  if((hollowPercent >= 25 || firmness < 6) && brix >= 10.5){
+    group = "A";
+  }
+
   const ripe=ripenessFromGroup(group);
   const crispPct=crispPercent(firmness), crispText=crispLabel(crispPct), hollowText=hollowDisplayLabel(hollowPercent);
 
@@ -502,7 +517,7 @@ function analyzeSession(){
   document.getElementById("confVal").innerText=`${conf.toFixed(0)} %`;document.getElementById("groupVal").innerText=`ช่วงสุก: ${group}`;
   setBar("brixBar",brix/14*100);setBar("firmBar",crispPct);setBar("juiceBar",juice);setBar("hollowBar",100-hollowPercent*2.5);setBar("confBar",conf);
   document.getElementById("featureList").innerHTML=`
-    <li>Q: ${Quse.toFixed(2)}</li><li>tau: ${tauUsed.toFixed(3)}</li><li>f_peak: ${avg.fPeak.toFixed(1)} Hz</li><li>f_mean: ${fMeanUse.toFixed(1)} Hz</li><li>f_std: ${fStdUse.toFixed(1)} Hz</li><li>f_variance: ${fVarUse.toFixed(1)}</li><li>hollow_index: ${hollowIndexUse.toFixed(3)}</li><li>Firmness raw: ${firmness.toFixed(1)} N</li><li>high_ratio: ${highRatioUse.toFixed(3)}</li><li>low_ratio: ${lowRatioUse.toFixed(3)}</li><li>flatness: ${flatnessUse.toFixed(3)}</li><li>rolloff85: ${rolloff85Use.toFixed(1)} Hz</li><li>peak count: ${peakCountUse.toFixed(0)}</li><li>low_ratio: ${avg.lowRatio.toFixed(3)}</li><li>flatness: ${avg.flatness.toFixed(3)}</li><li>Audio120 ripeness label: ${ripenessLabel120}</li><li>Audio120 group: ${group}</li><li>Perfect ripe meter: ${ripeMeter.toFixed(0)}/100</li><li>คุณภาพสัญญาณ: ${sigLabel} (${sigScore.toFixed(0)}%)</li><li>Q spread: ${qSpread.toFixed(2)}</li><li>tau fallback: ${tauFallbackCount}/${NUM_TAPS}</li><li>สถานะผล: ${warnLowQuality ? "ใช้ได้แต่ควรวัดซ้ำเพื่อยืนยัน" : "ใช้ได้"}</li>`;
+    <li>Q: ${Quse.toFixed(2)}</li><li>tau: ${tauUsed.toFixed(3)}</li><li>f_peak: ${avg.fPeak.toFixed(1)} Hz</li><li>f_mean: ${fMeanUse.toFixed(1)} Hz</li><li>f_std: ${fStdUse.toFixed(1)} Hz</li><li>f_variance: ${fVarUse.toFixed(1)}</li><li>hollow_index: ${hollowIndexUse.toFixed(3)}</li><li>Firmness raw: ${firmness.toFixed(1)} N</li><li>high_ratio: ${highRatioUse.toFixed(3)}</li><li>low_ratio: ${lowRatioUse.toFixed(3)}</li><li>flatness: ${flatnessUse.toFixed(3)}</li><li>rolloff85: ${rolloff85Use.toFixed(1)} Hz</li><li>peak count: ${peakCountUse.toFixed(0)}</li><li>low_ratio: ${avg.lowRatio.toFixed(3)}</li><li>flatness: ${avg.flatness.toFixed(3)}</li><li>Audio120 ripeness label: ${ripenessLabel120}</li><li>Final ripeness group: ${group} (Raw2/v20 primary)</li><li>Perfect ripe meter: ${ripeMeter.toFixed(0)}/100</li><li>คุณภาพสัญญาณ: ${sigLabel} (${sigScore.toFixed(0)}%)</li><li>Q spread: ${qSpread.toFixed(2)}</li><li>tau fallback: ${tauFallbackCount}/${NUM_TAPS}</li><li>สถานะผล: ${warnLowQuality ? "ใช้ได้แต่ควรวัดซ้ำเพื่อยืนยัน" : "ใช้ได้"}</li>`;
   saveHistory(ripe.label,brix,conf,melonScore,buyText,sigScore);
   speakSummaryAI({ripenessText:(group==="C"||group==="B")?"แตงโมลูกนี้อยู่ในช่วงพอดีกิน":group==="D"?"แตงโมลูกนี้ใกล้สุก":group==="E"?"แตงโมลูกนี้ยังค่อนข้างดิบ":"แตงโมลูกนี้มีแนวโน้มสุกมาก", sweetnessText:sweetnessLabel(brix), crispText, juiceText:juiceLabel(juice), hollowText, qualityText});
   setStatus("ตรวจวัดเสร็จแล้ว");

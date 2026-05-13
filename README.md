@@ -27,3 +27,9 @@ Clean rebuild: ตัดโค้ดซ้ำ/โค้ดเก่า/เอฟ
 - ใส่สมการ RidgeCV จากข้อมูล Audio120
 - เพิ่ม feature เสียง deployable: band energy, rolloff, peak count, peak2 ratio, attack/decay
 - ใช้ Logistic Regression จาก Audio120 สำหรับระดับสุก
+
+## v22.1 Ripeness Fix
+- แก้ระดับการสุกไม่ตรง โดยไม่ใช้ Audio120 classifier เป็นตัวตัดสินหลัก
+- ใช้ Raw2/v20 classifyRipenessAI เป็นตัวหลัก เพราะเสถียรกว่าในสนามจริง
+- Audio120 ยังใช้ทำนาย Brix/Firmness/Juice/Hollow และแสดงผลใน debug
+- เพิ่ม guard rule กันกรณีแอปบอก “ดิบ” ทั้งที่ Brix/Juice/Hollow ชี้ว่าใกล้สุกหรือสุกพอดี

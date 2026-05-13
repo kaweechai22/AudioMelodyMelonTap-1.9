@@ -51,3 +51,10 @@ Clean rebuild: ตัดโค้ดซ้ำ/โค้ดเก่า/เอฟ
 - Hollow -3.856
 - Firmness conservative correction -5.5 N
 - Export CSV keeps raw and calibrated values
+
+## v22.6 Ripeness + Hollow Field Fix
+- ปรับระดับการสุกจาก field test + ค่าจริงภาพหน้าตัด
+- ไม่ใช้ Audio120 classifier เป็นตัวตัดสินหลัก เพราะ field use ยังไวเกินไป
+- ใช้ rule จาก feature ที่เห็นชัด: band_150_300, Q, Brix, Firmness, Juice
+- ปรับ Hollow โดยคำนึงถึงหน่วยจริงใน Excel: 0.25 = 25%
+- Hollow ใช้ group-aware calibration: non-overripe ต่ำ, overripe scaling จาก hollow_raw

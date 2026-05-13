@@ -137,7 +137,7 @@ function spread(values){const vals=values.filter(Number.isFinite);return vals.le
 function getRMS(samples){let s=0;for(let i=0;i<samples.length;i++)s+=samples[i]*samples[i];return Math.sqrt(s/samples.length);}
 function movingAverage(arr,win=3){return arr.map((_,i)=>{let a=Math.max(0,i-1),b=Math.min(arr.length,i+2),s=0;for(let j=a;j<b;j++)s+=arr[j];return s/(b-a);});}
 
-function sweetnessLabel(brix){if(brix<8)return"หวานน้อย";if(brix<10.8)return"หวานอ่อน";if(brix<12)return"หวานดี";return"หวานมาก";}
+function sweetnessLabel(brix){if(brix<8)return"หวานน้อย";if(brix<10.8)return"หวานปานกลาง";if(brix<12)return"หวานมาก";return"หวานเจี๊ยบ";}
 function juiceLabel(juice){if(juice<50)return"ฉ่ำน้อย";if(juice<63)return"ฉ่ำกำลังดี";return"ฉ่ำมาก";}
 function crispPercent(firmness){return clamp(((firmness-5)/(20-5))*100,0,100);}
 function crispLabel(p){if(p<20)return"เนื้อนิ่มมาก";if(p<40)return"เนื้อค่อนข้างนิ่ม";if(p<60)return"เนื้อปานกลาง";if(p<80)return"เนื้อแน่นกำลังดี";return"เนื้อแน่นกรอบ";}
@@ -304,7 +304,7 @@ function perfectRipeDistance(brix,firmness,juice,hollow,Q,tau){
   return Math.sqrt(Math.pow((brix-t.brix)/1.4,2)+Math.pow((firmness-t.firmness)/4.5,2)+Math.pow((juice-t.juice)/7.5,2)+Math.pow((hollow-t.hollow)/7,2)+Math.pow((Q-t.Q)/2.8,2)+Math.pow((tau-t.tau)/0.05,2));
 }
 function perfectRipeMeter(d){return clamp(100-d*18,0,100);}
-function perfectRipeLabel(score){if(score<35)return{group:"E",text:"ดิบ"};if(score<60)return{group:"D",text:"ใกล้สุก"};if(score<85)return{group:"C",text:"สุกพอดี"};return{group:"B",text:"สุกมากพอดีกิน"};}
+function perfectRipeLabel(score){if(score<35)return{group:"E",text:"ดิบ"};if(score<60)return{group:"D",text:"ใกล้สุก"};if(score<85)return{group:"C",text:"สุกพอดี"};return{group:"B",text:"สุกมากเกิน"};}
 
 async function setupAudio(){
   if(!audioContext) audioContext=new (window.AudioContext||window.webkitAudioContext)();
@@ -602,7 +602,7 @@ function analyzeSession(){
   document.getElementById("featureList").innerHTML=`
     <li>Q: ${Quse.toFixed(2)}</li><li>tau: ${tauUsed.toFixed(3)}</li><li>f_peak: ${avg.fPeak.toFixed(1)} Hz</li><li>f_mean: ${fMeanUse.toFixed(1)} Hz</li><li>f_std: ${fStdUse.toFixed(1)} Hz</li><li>f_variance: ${fVarUse.toFixed(1)}</li><li>hollow_index: ${hollowIndexUse.toFixed(3)}</li><li>Brix raw: ${brixRaw.toFixed(2)} °Bx → calibrated: ${brix.toFixed(2)} °Bx</li><li>Firmness raw model: ${firmnessRaw.toFixed(1)} N → calibrated: ${firmness.toFixed(1)} N</li><li>Juice raw: ${juiceRaw.toFixed(1)}% → calibrated: ${juice.toFixed(1)}%</li><li>Hollow raw: ${hollowRawPercent.toFixed(1)}% → calibrated: ${hollowPercent.toFixed(1)}%</li><li>high_ratio: ${highRatioUse.toFixed(3)}</li><li>low_ratio: ${lowRatioUse.toFixed(3)}</li><li>flatness: ${flatnessUse.toFixed(3)}</li><li>rolloff85: ${rolloff85Use.toFixed(1)} Hz</li><li>peak count: ${peakCountUse.toFixed(0)}</li><li>low_ratio: ${avg.lowRatio.toFixed(3)}</li><li>flatness: ${avg.flatness.toFixed(3)}</li><li>Audio120 ripeness label: ${ripenessLabel120}</li><li>Final ripeness group: ${group} (Raw2/v20 primary)</li><li>Perfect ripe meter: ${ripeMeter.toFixed(0)}/100</li><li>คุณภาพสัญญาณ: ${sigLabel} (${sigScore.toFixed(0)}%)</li><li>Q spread: ${qSpread.toFixed(2)}</li><li>tau fallback: ${tauFallbackCount}/${NUM_TAPS}</li><li>สถานะผล: ${warnLowQuality ? "ใช้ได้แต่ควรวัดซ้ำเพื่อยืนยัน" : "ใช้ได้"}</li>`;
   saveHistory(ripe.label,brix,conf,melonScore,buyText,sigScore);
-  speakSummaryAI({ripenessText:(group==="C"||group==="B")?"แตงโมลูกนี้อยู่ในช่วงพอดีกิน":group==="D"?"แตงโมลูกนี้ใกล้สุก":group==="E"?"แตงโมลูกนี้ยังค่อนข้างดิบ":"แตงโมลูกนี้มีแนวโน้มสุกมาก", sweetnessText:sweetnessLabel(brix), crispText, juiceText:juiceLabel(juice), hollowText, qualityText});
+  speakSummaryAI({ripenessText:(group==="C"||group==="B")?"แตงโมลูกนี้อยู่ในช่วงพอดีกิน":group==="D"?"แตงโมลูกนี้ใกล้สุก":group==="E"?"แตงโมลูกนี้ยังค่อนข้างดิบ":"แตงโมลูกนี้มีแนวโน้มสุกเกิน", sweetnessText:sweetnessLabel(brix), crispText, juiceText:juiceLabel(juice), hollowText, qualityText});
   
   saveMeasurementDebug({
     timestamp: new Date().toISOString(),

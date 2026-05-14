@@ -65,3 +65,11 @@ Clean rebuild: ตัดโค้ดซ้ำ/โค้ดเก่า/เอฟ
 - New ripeness decision tree using f_mean, low_ratio, flatness, f_peak, firmness
 - Linear field correction for Brix/Firmness/Juice
 - Hollow offset +0.65 after v22.6 correction
+
+
+## v22.8 Three-stage Ripeness
+- ตัดระดับ “ดิบ” ออกจากผลลัพธ์หลัก
+- แสดงระดับสุก 3 ช่วง: ใกล้สุก / สุกพอดี / สุกเกิน
+- ปรับคำหวาน: หวานอ่อน→หวาน, หวานดี→หวานมาก, หวานที่สุด→หวานเจี๊ยบ
+- เปลี่ยนคำสุกมากเป็นสุกเกิน
+- Tuned from TEST6 3-class field data

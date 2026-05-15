@@ -48,7 +48,7 @@
 <body>
 <div class="wrap">
   <h1>MelodyMelonTap 🎤🍉</h1>
-  <div class="version">Version: v2026.05.14-hybrid-audio120-v24.2-hollow-warning-voice</div>
+  <div class="version">Version: v2026.05.14-hybrid-audio120-v24.3-hollow-warning-fix</div>
   <div class="voiceNote">🎙 AI Voice Summary อ่านสรุปผลแบบภาษาคน ไม่อ่านตัวเลขยาว</div>
 
   <div class="card">
@@ -97,6 +97,13 @@
   
   <button id="clearCsvBtn" class="secondary" onclick="clearMeasurementsCSV()" type="button">
     ล้างข้อมูล CSV
+  </button>
+</div>
+
+
+<div style="margin:8px 0;display:flex;gap:10px;flex-wrap:wrap;">
+  <button id="testBeepBtn" class="secondary" onclick="playWarningBeep('medium')" type="button">
+    ทดสอบเสียงเตือน
   </button>
 </div>
 
@@ -760,7 +767,7 @@ function analyzeSession(){
   document.getElementById("featureList").innerHTML=`
     <li>Q: ${Quse.toFixed(2)}</li><li>tau: ${tauUsed.toFixed(3)}</li><li>f_peak: ${avg.fPeak.toFixed(1)} Hz</li><li>f_mean: ${fMeanUse.toFixed(1)} Hz</li><li>f_std: ${fStdUse.toFixed(1)} Hz</li><li>f_variance: ${fVarUse.toFixed(1)}</li><li>hollow_index: ${hollowIndexUse.toFixed(3)}</li><li>Brix raw: ${brixRaw.toFixed(2)} °Bx → calibrated: ${brix.toFixed(2)} °Bx</li><li>Firmness raw model: ${firmnessRaw.toFixed(1)} N → calibrated: ${firmness.toFixed(1)} N</li><li>Juice raw: ${juiceRaw.toFixed(1)}% → calibrated: ${juice.toFixed(1)}%</li><li>Hollow raw: ${hollowRawPercent.toFixed(1)}% → v22.5: ${hollowPercentOriginal.toFixed(1)}% → v22.6: ${hollowPercent.toFixed(1)}%</li><li>high_ratio: ${highRatioUse.toFixed(3)}</li><li>low_ratio: ${lowRatioUse.toFixed(3)}</li><li>flatness: ${flatnessUse.toFixed(3)}</li><li>rolloff85: ${rolloff85Use.toFixed(1)} Hz</li><li>peak count: ${peakCountUse.toFixed(0)}</li><li>low_ratio: ${avg.lowRatio.toFixed(3)}</li><li>flatness: ${avg.flatness.toFixed(3)}</li><li>Audio120 ripeness label: ${ripenessLabel120}</li><li>Final ripeness group: ${group} (v22.9 tuned 3-stage rule)</li><li>Perfect ripe meter: ${ripeMeter.toFixed(0)}/100</li><li>คุณภาพสัญญาณ: ${sigLabel} (${sigScore.toFixed(0)}%)</li><li>Q spread: ${qSpread.toFixed(2)}</li><li>tau fallback: ${tauFallbackCount}/${NUM_TAPS}</li><li>สถานะผล: ${warnLowQuality ? "ใช้ได้แต่ควรวัดซ้ำเพื่อยืนยัน" : "ใช้ได้"}</li>`;
   saveHistory(ripe.label,brix,conf,melonScore,buyText,sigScore);
-  speakSummaryAI({ripenessText:(ripenessExtraText || (group==="C" ? "แตงโมลูกนี้อยู่ในช่วงสุกพอดี" : ((group==="A"||group==="B") ? "แตงโมลูกนี้มีแนวโน้มสุกเกิน" : "แตงโมลูกนี้ใกล้สุก"))), sweetnessText:sweetnessLabel(brix), crispText, juiceText:juiceLabel(juice), hollowText, qualityText});
+  speakSummaryAI({ripenessText:(ripenessExtraText || (group==="C" ? "แตงโมลูกนี้อยู่ในช่วงสุกพอดี" : ((group==="A"||group==="B") ? "แตงโมลูกนี้มีแนวโน้มสุกเกิน" : "แตงโมลูกนี้ใกล้สุก"))), sweetnessText:sweetnessLabel(brix), crispText, juiceText:juiceLabel(juice), hollowText, qualityText, hollowPercent});
   
   saveMeasurementDebug({
     timestamp: new Date().toISOString(),
@@ -817,7 +824,7 @@ function analyzeSession(){
     q_spread: Number(qSpread.toFixed(3)),
     tau_fallback_count: tauFallbackCount,
     measurement_status: warnLowQuality ? "ควรวัดซ้ำ" : "ใช้ได้",
-    model_version: "v24.1-boundary-hint",
+    model_version: "v24.3-hollow-warning-fix",
     boundary_ripeness_zone: isBoundaryRipeness
   });
 
@@ -834,15 +841,29 @@ function showRetry(conf,sigLabel,sigScore,qSpread,tauSpread,tauFallbackCount){
 
 
 // ===== Hollow Warning Voice v24.2 =====
-function getHollowWarningText(hollowText){
-  if(!hollowText) return "";
-  if(hollowText.includes("มีโพรงมาก")){
-    return "คำเตือน แตงโมลูกนี้มีโพรงภายในค่อนข้างมาก";
+
+
+
+
+
+
+// ===== Hollow Warning Voice v24.3 FIX =====
+function getHollowWarningByPercent(hollowPercent){
+  const h = Number(hollowPercent);
+  if(!Number.isFinite(h)) return {text:"", level:"none"};
+  if(h >= 18){
+    return {
+      text:"คำเตือน แตงโมลูกนี้มีโพรงภายในค่อนข้างมาก",
+      level:"high"
+    };
   }
-  if(hollowText.includes("เริ่มมีโพรง")){
-    return "คำเตือน แตงโมลูกนี้เริ่มมีโพรงภายใน";
+  if(h >= 7){
+    return {
+      text:"คำเตือน แตงโมลูกนี้เริ่มมีโพรงภายใน",
+      level:"medium"
+    };
   }
-  return "";
+  return {text:"", level:"none"};
 }
 
 function playWarningBeep(level="medium"){
@@ -865,21 +886,22 @@ function playWarningBeep(level="medium"){
     };
 
     if(level === "high"){
-      beep(660, 0.00, 0.16, 0.08);
-      beep(660, 0.24, 0.16, 0.08);
+      beep(740, 0.00, 0.18, 0.16);
+      beep(740, 0.28, 0.18, 0.16);
     }else{
-      beep(660, 0.00, 0.18, 0.07);
+      beep(740, 0.00, 0.22, 0.14);
     }
 
-    setTimeout(() => ctx.close().catch(()=>{}), level === "high" ? 900 : 600);
+    setTimeout(() => ctx.close().catch(()=>{}), level === "high" ? 1100 : 800);
   }catch(e){
-    console.log(e);
+    console.log("beep error", e);
   }
 }
 
 
 function speakSummaryAI(summary){
-  const hollowWarning = getHollowWarningText(summary.hollowText);
+  const warning = getHollowWarningByPercent(summary.hollowPercent);
+
   const parts = [
     summary.ripenessText,
     summary.sweetnessText,
@@ -887,22 +909,22 @@ function speakSummaryAI(summary){
     summary.juiceText
   ];
 
-  if(hollowWarning){
-    parts.push(hollowWarning);
+  if(warning.text){
+    parts.push(warning.text);
   }
 
   parts.push(summary.qualityText);
 
   const text = parts.filter(Boolean).join(", ");
 
-  if(hollowWarning){
-    const level = hollowWarning.includes("ค่อนข้างมาก") ? "high" : "medium";
-    playWarningBeep(level);
-    setTimeout(() => speakText(text), level === "high" ? 650 : 420);
+  if(warning.text){
+    playWarningBeep(warning.level);
+    setTimeout(() => speakText(text), warning.level === "high" ? 750 : 500);
   }else{
     speakText(text);
   }
 }
+
 
 
 function speakText(text){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang="th-TH";u.rate = 0.96;u.pitch = 1.0;u.volume=1;const v=speechSynthesis.getVoices().find(v=>v.lang&&v.lang.toLowerCase().includes("th"));if(v)u.voice=v;speechSynthesis.speak(u);}catch(e){console.log(e);}}
